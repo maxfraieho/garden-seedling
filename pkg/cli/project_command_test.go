@@ -161,3 +161,268 @@ func TestProjectNewCommandArgs(t *testing.T) {
 		})
 	}
 }
+
+func TestProjectNewCommandFlags(t *testing.T) {
+	cmd := NewProjectNewCommand()
+
+	// Check standard flags
+	ownerFlag := cmd.Flags().Lookup("owner")
+	require.NotNil(t, ownerFlag, "Should have --owner flag")
+
+	linkFlag := cmd.Flags().Lookup("link")
+	require.NotNil(t, linkFlag, "Should have --link flag")
+
+	// Check campaign setup flag
+	campaignFlag := cmd.Flags().Lookup("with-campaign-setup")
+	require.NotNil(t, campaignFlag, "Should have --with-campaign-setup flag")
+	assert.Equal(t, "bool", campaignFlag.Value.Type(), "Campaign setup flag should be boolean")
+
+	// Verify removed flags don't exist
+	viewsFlag := cmd.Flags().Lookup("views")
+	assert.Nil(t, viewsFlag, "Should not have --views flag")
+
+	fieldsFlag := cmd.Flags().Lookup("fields")
+	assert.Nil(t, fieldsFlag, "Should not have --fields flag")
+}
+
+func TestParseProjectURL(t *testing.T) {
+	tests := []struct {
+		name           string
+		url            string
+		expectedScope  string
+		expectedOwner  string
+		expectedNumber int
+		shouldErr      bool
+	}{
+		{
+			name:           "org project",
+			url:            "https://github.com/orgs/myorg/projects/123",
+			expectedScope:  "orgs",
+			expectedOwner:  "myorg",
+			expectedNumber: 123,
+			shouldErr:      false,
+		},
+		{
+			name:           "user project",
+			url:            "https://github.com/users/myuser/projects/456",
+			expectedScope:  "users",
+			expectedOwner:  "myuser",
+			expectedNumber: 456,
+			shouldErr:      false,
+		},
+		{
+			name:      "invalid URL",
+			url:       "https://github.com/myorg/myrepo",
+			shouldErr: true,
+		},
+		{
+			name:      "empty URL",
+			url:       "",
+			shouldErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := parseProjectURL(tt.url)
+			if tt.shouldErr {
+				assert.Error(t, err, "Should return error for invalid URL")
+			} else {
+				require.NoError(t, err, "Should not return error for valid URL")
+				assert.Equal(t, tt.expectedScope, result.scope, "Scope should match")
+				assert.Equal(t, tt.expectedOwner, result.ownerLogin, "Owner should match")
+				assert.Equal(t, tt.expectedNumber, result.projectNumber, "Project number should match")
+			}
+		})
+	}
+}
+
+func TestEnsureSingleSelectOptionBefore(t *testing.T) {
+	tests := []struct {
+		name           string
+		options        []singleSelectOption
+		desired        singleSelectOption
+		beforeName     string
+		expectChanged  bool
+		expectedLength int
+	}{
+		{
+			name: "add new option before Done",
+			options: []singleSelectOption{
+				{Name: "Todo", Color: "GRAY"},
+				{Name: "In Progress", Color: "YELLOW"},
+				{Name: "Done", Color: "GREEN"},
+			},
+			desired:        singleSelectOption{Name: "Review Required", Color: "BLUE", Description: "Needs review"},
+			beforeName:     "Done",
+			expectChanged:  true,
+			expectedLength: 4,
+		},
+		{
+			name: "option already exists in correct position",
+			options: []singleSelectOption{
+				{Name: "Todo", Color: "GRAY"},
+				{Name: "In Progress", Color: "YELLOW"},
+				{Name: "Review Required", Color: "BLUE", Description: "Needs review"},
+				{Name: "Done", Color: "GREEN"},
+			},
+			desired:        singleSelectOption{Name: "Review Required", Color: "BLUE", Description: "Needs review"},
+			beforeName:     "Done",
+			expectChanged:  false,
+			expectedLength: 4,
+		},
+		{
+			name: "option exists but in wrong position",
+			options: []singleSelectOption{
+				{Name: "Review Required", Color: "BLUE", Description: "Needs review"},
+				{Name: "Todo", Color: "GRAY"},
+				{Name: "In Progress", Color: "YELLOW"},
+				{Name: "Done", Color: "GREEN"},
+			},
+			desired:        singleSelectOption{Name: "Review Required", Color: "BLUE", Description: "Needs review"},
+			beforeName:     "Done",
+			expectChanged:  true,
+			expectedLength: 4,
+		},
+		{
+			name: "beforeName option does not exist - appends to end",
+			options: []singleSelectOption{
+				{Name: "Todo", Color: "GRAY"},
+				{Name: "In Progress", Color: "YELLOW"},
+			},
+			desired:        singleSelectOption{Name: "Review Required", Color: "BLUE", Description: "Needs review"},
+			beforeName:     "NonExistent",
+			expectChanged:  true,
+			expectedLength: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, changed := ensureSingleSelectOptionBefore(tt.options, tt.desired, tt.beforeName)
+			assert.Equal(t, tt.expectChanged, changed, "Changed status should match expectation")
+			assert.Len(t, result, tt.expectedLength, "Result length should match")
+
+			if !tt.expectChanged {
+				// If nothing changed, result should be equal to input
+				assert.Equal(t, tt.options, result, "Options should be unchanged")
+			} else {
+				// Find the desired option and Done option
+				desiredIdx, doneIdx := -1, -1
+				for i, opt := range result {
+					if opt.Name == tt.desired.Name {
+						desiredIdx = i
+					}
+					if opt.Name == tt.beforeName {
+						doneIdx = i
+					}
+				}
+
+				if desiredIdx >= 0 && doneIdx >= 0 {
+					assert.Less(t, desiredIdx, doneIdx, "Desired option should be before Done")
+				}
+			}
+		})
+	}
+}
+
+func TestSingleSelectOptionsEqual(t *testing.T) {
+	tests := []struct {
+		name     string
+		a        []singleSelectOption
+		b        []singleSelectOption
+		expected bool
+	}{
+		{
+			name: "equal options",
+			a: []singleSelectOption{
+				{Name: "Option 1", Color: "RED"},
+				{Name: "Option 2", Color: "BLUE"},
+			},
+			b: []singleSelectOption{
+				{Name: "Option 1", Color: "RED"},
+				{Name: "Option 2", Color: "BLUE"},
+			},
+			expected: true,
+		},
+		{
+			name: "different lengths",
+			a: []singleSelectOption{
+				{Name: "Option 1", Color: "RED"},
+			},
+			b: []singleSelectOption{
+				{Name: "Option 1", Color: "RED"},
+				{Name: "Option 2", Color: "BLUE"},
+			},
+			expected: false,
+		},
+		{
+			name: "different order",
+			a: []singleSelectOption{
+				{Name: "Option 1", Color: "RED"},
+				{Name: "Option 2", Color: "BLUE"},
+			},
+			b: []singleSelectOption{
+				{Name: "Option 2", Color: "BLUE"},
+				{Name: "Option 1", Color: "RED"},
+			},
+			expected: false,
+		},
+		{
+			name:     "both empty",
+			a:        []singleSelectOption{},
+			b:        []singleSelectOption{},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := singleSelectOptionsEqual(tt.a, tt.b)
+			assert.Equal(t, tt.expected, result, "Equality check should match expectation")
+		})
+	}
+}
+
+func TestProjectConfigWithCampaignSetup(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      ProjectConfig
+		description string
+	}{
+		{
+			name: "with campaign setup",
+			config: ProjectConfig{
+				Title:             "Campaign Project",
+				Owner:             "myorg",
+				OwnerType:         "org",
+				WithCampaignSetup: true,
+			},
+			description: "Should have campaign setup enabled",
+		},
+		{
+			name: "without campaign setup",
+			config: ProjectConfig{
+				Title:             "Basic Project",
+				Owner:             "myorg",
+				OwnerType:         "org",
+				WithCampaignSetup: false,
+			},
+			description: "Should have campaign setup disabled",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NotEmpty(t, tt.config.Title, "Project title should not be empty")
+			assert.NotEmpty(t, tt.config.Owner, "Project owner should not be empty")
+
+			// Verify flag settings
+			if tt.config.WithCampaignSetup {
+				assert.True(t, tt.config.WithCampaignSetup, "Campaign setup should be enabled")
+			} else {
+				assert.False(t, tt.config.WithCampaignSetup, "Campaign setup should be disabled")
+			}
+		})
+	}
+}
