@@ -101,6 +101,23 @@ After updating the policy:
 > Security Consideration
 > The gh-aw custom actions are open source and can be audited at [github.com/github/gh-aw/tree/main/actions](https://github.com/github/gh-aw/tree/main/actions). The actions are pinned to specific commit SHAs in compiled workflows for security and reproducibility.
 
+## Repository Configuration Issues
+
+### Actions Restrictions Reported During Init
+
+When running `gh aw add-wizard` or `gh aw init`, you may encounter errors about repository Actions configuration. Agentic workflows compile to standard GitHub Actions YAML that depends on infrastructure actions like `actions/checkout`. If your repository blocks these, workflows won't execute.
+
+The CLI validates three permission layers:
+
+**Actions completely turned off:** Your repo has Actions disabled entirely. Workflows upload successfully but never trigger. Fix: Repository Settings → Actions → General → toggle Actions on. Reference: [Managing Actions settings](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository).
+
+**Local-only restriction:** You've configured "Allow [owner] actions only", which blocks external actions including GitHub's own. Agentic workflows need `actions/checkout`, `actions/setup-node`, etc. Fix: Settings → Actions → General → switch to "Allow all actions" or "Allow select actions" with GitHub-created ones enabled. Reference: [Managing Actions permissions](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#managing-github-actions-permissions-for-your-repository).
+
+**Selective allowlist without GitHub:** You're using action allowlists but didn't check "Allow actions created by GitHub". Fix: Settings → Actions → General → Actions permissions → enable the GitHub checkbox. Reference: [Allowing specific actions](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-select-actions-and-reusable-workflows-to-run).
+
+> [!NOTE]
+> Organization-owned repositories inherit org-level Actions policies that override repository settings. If settings appear grayed out, request changes from org admins.
+
 ## Workflow Compilation Issues
 
 ### Workflow Won't Compile
@@ -422,7 +439,29 @@ tools:
     key: memory-${{ github.workflow }}-${{ github.run_id }}
 ```
 
-## Debugging Strategies
+## Workflow Failures and Debugging
+
+### Why Did My Workflow Fail?
+
+Common failure reasons include:
+
+- **Missing or incorrect tokens**: Verify `COPILOT_GITHUB_TOKEN` or engine-specific API keys are configured
+- **Permission mismatches**: Check `permissions:` section matches required operations
+- **Network restrictions**: Verify domains in `network.allowed` include all required endpoints
+- **Disabled tools**: Ensure needed tools are enabled in the `tools:` configuration
+- **AI API rate limits**: Check your AI provider's usage and quotas
+
+Use `gh aw audit <run-id>` to investigate failures in detail.
+
+### How Do I Debug a Failing Workflow?
+
+1. **Check workflow logs**: View in GitHub Actions UI or use `gh aw logs`
+2. **Audit the run**: Use `gh aw audit <run-id>` for detailed analysis
+3. **Inspect compiled workflow**: Check `.lock.yml` for unexpected configuration
+4. **Use Copilot Chat**: Run `/agent agentic-workflows debug` for guided debugging
+5. **Watch compilation**: Use `gh aw compile --watch` during development
+
+### Debugging Strategies
 
 Enable verbose compilation (`gh aw compile --verbose`), set `ACTIONS_STEP_DEBUG = true` for debug logging, inspect generated lock files (`cat .github/workflows/my-workflow.lock.yml`), check MCP configuration (`gh aw mcp inspect my-workflow`), and review logs (`gh aw logs my-workflow` or `gh aw audit RUN_ID`).
 
