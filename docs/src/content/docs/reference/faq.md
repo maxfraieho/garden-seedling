@@ -32,9 +32,9 @@ We fully embrace the need for deterministic CI/CD, especially in build, release,
 
 Think of it this way: your build, test, and release workflows should remain fully deterministic and reproducible. Agentic workflows complement these by handling tasks that are inherently non-deterministic anyway - like triaging issues, drafting documentation, researching dependencies, or proposing code improvements for human review.
 
-The key insight is that many valuable automation tasks don't require determinism. When an AI reviews an issue and suggests a label, or drafts release notes from commits, the exact wording doesn't need to be reproducible - it needs to be helpful. Agentic workflows excel at these judgment-based tasks while your critical CI/CD pipelines remain unchanged.
+The key insight is that many valuable automation tasks don't require determinism. When a coding agent reviews an issue and suggests a label, or drafts release notes from commits, the exact wording doesn't need to be reproducible - it needs to be helpful. Agentic workflows excel at these judgment-based tasks while your critical CI/CD pipelines remain unchanged.
 
-Your first call should be reliable, deterministic CI/CD. If you use agentic workflows, you should use them for tasks that benefit from AI's flexibility and creativity, not for core build and release processes that require strict reproducibility.
+Your first call should be reliable, deterministic CI/CD. If you use agentic workflows, you should use them for tasks that benefit from a coding agent's flexibility, not for core build and release processes that require strict reproducibility.
 
 ### Can agentic workflows write code and create pull requests?
 
