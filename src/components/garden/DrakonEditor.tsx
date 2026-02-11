@@ -275,21 +275,28 @@ export function DrakonEditor({
     if (!el) return;
 
     const onPointerDownCapture = (e: PointerEvent) => {
-      // Right-click: never let canvas deselect
+      // Right-click: let it through to widget so contextmenu event fires normally.
+      // Do NOT stopPropagation — widget needs this to show its context menu.
       if (e.button === 2) {
-        console.log('[DRK] capture guard: right-click, stopPropagation');
-        e.stopPropagation();
+        console.log('[DRK] capture guard: right-click, passing through');
         return;
       }
 
-      // While context menu is open: block canvas handlers from clearing selection
+      // While context menu is open: block LEFT clicks on canvas background
+      // from clearing selection. Clicks on menu items are handled by React.
       if (uiStateRef.current === 'contextMenuOpen') {
-        console.log('[DRK] capture guard: contextMenuOpen, stopPropagation');
+        const target = e.target as HTMLElement;
+        // Allow clicks inside context menu itself
+        if (target.closest('[data-drakon-context-menu]')) {
+          console.log('[DRK] capture guard: click inside menu, allowing');
+          return;
+        }
+        console.log('[DRK] capture guard: contextMenuOpen, left click on canvas, stopPropagation');
         e.stopPropagation();
         return;
       }
 
-      // While in paste mode: let widget handle socket clicks, but log for debugging
+      // While in paste mode: let widget handle socket clicks
       if (uiStateRef.current === 'pasteMode') {
         console.log('[DRK] capture guard: pasteMode, allowing click through to widget');
         return;
