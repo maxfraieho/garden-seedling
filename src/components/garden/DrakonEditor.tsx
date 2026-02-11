@@ -647,8 +647,15 @@ export function DrakonEditor({
                     className="w-full flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground text-left"
                     onClick={(e) => {
                       e.stopPropagation();
-                      item.action?.();
+                      const action = item.action;
                       setContextMenu(null);
+                      // Delay action execution to let the context menu unmount first,
+                      // so the widget canvas can properly show paste sockets / selection highlights
+                      if (action) {
+                        requestAnimationFrame(() => {
+                          action();
+                        });
+                      }
                     }}
                   >
                     {item.text}
