@@ -129,7 +129,14 @@ export function DrakonEditor({
       });
     },
     showContextMenu: (left, top, items) => {
-      setContextMenu({ x: left, y: top, items });
+      // Convert page coordinates to container-relative coordinates
+      const containerEl = containerRef.current;
+      if (containerEl) {
+        const rect = containerEl.getBoundingClientRect();
+        setContextMenu({ x: left - rect.left, y: top - rect.top, items });
+      } else {
+        setContextMenu({ x: left, y: top, items });
+      }
     },
     startEditSecondary: (item, isReadonly) => {
       if (isReadonly) return;
@@ -142,6 +149,55 @@ export function DrakonEditor({
             widgetRef.current.setSecondary(item.id, newSecondary);
             setHasChanges(true);
           }
+        },
+      });
+    },
+    startEditLink: (item, isReadonly) => {
+      if (isReadonly) return;
+      setEditDialog({
+        open: true,
+        title: t.drakon.editLink || 'Edit Link',
+        value: item.link || '',
+        onConfirm: (newLink) => {
+          if (widgetRef.current) {
+            widgetRef.current.setLink(item.id, newLink);
+            setHasChanges(true);
+          }
+        },
+      });
+    },
+    startEditStyle: (ids, oldStyle, x, y, accepted) => {
+      // For now, provide a simple JSON-based style editor
+      const styleStr = JSON.stringify(oldStyle || {}, null, 2);
+      setEditDialog({
+        open: true,
+        title: t.drakon.format || 'Format',
+        value: styleStr,
+        onConfirm: (newStyleStr) => {
+          try {
+            const newStyle = JSON.parse(newStyleStr);
+            if (widgetRef.current) {
+              widgetRef.current.setStyle(ids, newStyle);
+              setHasChanges(true);
+            }
+          } catch { /* ignore invalid JSON */ }
+        },
+      });
+    },
+    startEditDiagramStyle: (oldStyle, x, y) => {
+      const styleStr = JSON.stringify(oldStyle || {}, null, 2);
+      setEditDialog({
+        open: true,
+        title: t.drakon.format || 'Format Diagram',
+        value: styleStr,
+        onConfirm: (newStyleStr) => {
+          try {
+            const newStyle = JSON.parse(newStyleStr);
+            if (widgetRef.current) {
+              widgetRef.current.setDiagramStyle(newStyle);
+              setHasChanges(true);
+            }
+          } catch { /* ignore invalid JSON */ }
         },
       });
     },
@@ -560,7 +616,7 @@ export function DrakonEditor({
       {/* Editor layout with toolbar at bottom */}
       <div className="flex flex-col gap-2">
         {/* Widget container */}
-        <div className="relative" onClick={() => setContextMenu(null)}>
+        <div className="relative" onClick={(e) => { if (!(e.target as HTMLElement).closest('[data-drakon-context-menu]')) setContextMenu(null); }}>
           {isLoading && (
             <div 
               className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg z-10" 
@@ -578,6 +634,7 @@ export function DrakonEditor({
           {/* Context menu */}
           {contextMenu && (
             <div
+              data-drakon-context-menu
               className="absolute z-50 min-w-[140px] rounded-md border bg-popover p-1 shadow-md"
               style={{ left: contextMenu.x, top: contextMenu.y }}
             >
@@ -588,7 +645,8 @@ export function DrakonEditor({
                   <button
                     key={i}
                     className="w-full flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground text-left"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       item.action?.();
                       setContextMenu(null);
                     }}
