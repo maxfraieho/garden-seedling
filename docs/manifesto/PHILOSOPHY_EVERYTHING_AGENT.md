@@ -1,87 +1,86 @@
-# Philosophy: Everything is an Agent
+# Філософія: Все є Агентом
 
-> Derived from: MANIFESTO.md, Sections 2-3
-
----
-
-## Core Principle
-
-**Everything is an agent.** But an agent is not a chatbot.
-
-An agent is:
-- a bounded context
-- a defined role
-- an instruction for action
-- memory
-- responsibility
-
-## Mapping to Filesystem
-
-| Filesystem Entity | Agent Concept | Behavior |
-|-------------------|---------------|----------|
-| **Folder** | Agent / Agent Container | Defines knowledge boundaries, permissions, visibility context |
-| **File** (Markdown) | Instruction / Logic / Memory | System prompt, reasoning result, accumulated memory, behavior description |
-| **Subfolder** | Subagent | Hierarchically subordinate, inherits/extends parent context |
-
-> If a folder has no explicit agent file, it is still a default agent (read-only knowledge agent).
-
-## Context is Not a Prompt
-
-Context:
-- is not passed fully into the model
-- is not "stuffed" into a single message
-- is explored by the agent incrementally
-
-The agent:
-- **looks into the folder**
-- reads files
-- makes relevance choices
-- acts as a researcher, not a calculator
-
-This is implemented through:
-- MinIO / file zones
-- RAG
-- NotebookLM as strict cognitive layer
-
-## Knowledge-Action Duality
-
-- **Knowledge without agent = dead** (static documents nobody acts on)
-- **Agent without context = harmful** (hallucination, no grounding)
-
-The system creates the bridge: knowledge structures become agent behavior through folder-as-context mapping.
-
-## Design Principles
-
-1. Knowledge > UI
-2. Simplicity of structure > "clever" abstractions
-3. Markdown = the primary contract
-4. Agent without context is harmful
-5. Context without agent is dead
+> Джерело: MANIFESTO.md, розділи 2–3
+> Оновлено: 2026-02-15 | Архітектура: Mastra + Inngest
 
 ---
 
-## Mapping to gh-aw (GitHub Agentic Workflows)
+## Основний принцип
 
-The gh-aw framework provides the **concrete implementation format** for the manifesto's agent concepts:
+**Все є агентом.** Але агент — це не чатбот.
 
-| Manifesto Concept | gh-aw Implementation | Evidence |
-|-------------------|---------------------|----------|
-| **Agent** | `.github/agents/<name>.md` — YAML frontmatter (config) + Markdown body (instructions) | `gh-aw/.github/agents/` |
-| **Folder-as-Agent** | Each folder's `_agent.md` defines its agent identity; gh-aw agents live in `.github/agents/` | Adaptation needed for project's folder-per-agent structure |
-| **File-as-Instruction** | Markdown body = natural language instructions. Skills = `skills/<name>/SKILL.md` | `gh-aw/skills/` (24+ modules) |
-| **Context is Not a Prompt** | gh-aw agents receive context from repo, issues, PRs — not stuffed into prompt | gh-aw spec: context access via tools |
-| **Human-in-the-loop** | **Safe-outputs**: agent proposes structured actions (create-issue, add-comment), system/human approves | `gh-aw/.github/aw/github-agentic-workflows.md` |
-| **Knowledge-Action Duality** | Knowledge = Markdown files. Action = agent tools (bash, edit, github, web-fetch). Bridge = gh-aw compilation | gh-aw spec: tools section |
+Агент — це:
+- обмежений контекст
+- визначена роль
+- інструкція до дії
+- пам'ять
+- відповідальність
 
-### Key Adaptation for Agentic Digital Garden
+## Відображення на файлову систему
 
-gh-aw is designed for GitHub Actions. Our adaptation:
-1. **Agent definitions** live inside note folders (`_agent.md`) instead of `.github/agents/`
-2. **Safe-outputs** map to our Edit Proposals system (guest proposes, owner approves)
-3. **Skills** map to our DRAKON pseudocode exports (visual logic → reusable agent instruction)
-4. **Tools** include NotebookLM (grounded AI) as primary cognitive tool, not just bash/edit/github
-5. **Compilation target** is not GitHub Actions but our Worker + Backend execution pipeline
+| Сутність файлової системи | Концепція агента | Поведінка |
+|---------------------------|-----------------|----------|
+| **Папка** (MinIO prefix) | Агент / Контейнер агента | Визначає межі знань, дозволи, контекст видимості |
+| **Файл** (Markdown) | Інструкція / Логіка / Пам'ять | System prompt, результат reasoning, накопичена пам'ять, опис поведінки |
+| **Підпапка** | Субагент | Ієрархічно підпорядкований, успадковує/розширює контекст батька |
+
+> Папка без явного файлу `_agent.md` — це потенційний агент (ідеологічний рівень маніфесту). На технічному рівні контракту — агент активується лише при наявності `_agent.md`.
+
+## Контекст — це не промпт
+
+Контекст:
+- не передається повністю у модель
+- не "нашпиговується" в одне повідомлення
+- досліджується агентом інкрементально
+
+Агент:
+- **заглядає у папку**
+- читає файли
+- приймає рішення про релевантність
+- діє як дослідник, не як калькулятор
+
+Це реалізується через:
+- MinIO / зони файлів
+- RAG (retrieval-augmented generation)
+- NotebookLM як строгий когнітивний шар (grounded reasoning)
+
+## Двоїстість Знання–Дії
+
+- **Знання без агента = мертві** (статичні документи, за якими ніхто не діє)
+- **Агент без контексту = шкідливий** (галюцинації, відсутність заземлення)
+
+Система створює міст: структури знань стають поведінкою агента через відображення папка-як-контекст.
+
+## Принципи проєктування
+
+1. Знання > UI
+2. Простота структури > "розумні" абстракції
+3. Markdown = головний контракт
+4. Агент без контексту — шкідливий
+5. Контекст без агента — мертвий
 
 ---
 
-*Source: MANIFESTO.md, Sections 2, 3, 9; gh-aw reference at `gh-aw/`*
+## Відображення на архітектуру Mastra + Inngest
+
+| Концепція маніфесту | Реалізація | Джерело |
+|--------------------|-----------|--------|
+| **Агент** | `agents/<slug>/_agent.md` — YAML frontmatter (конфігурація) + Markdown body (інструкції/pseudocode) | КОНТРАКТ_АГЕНТА_V1.md |
+| **Папка-як-Агент** | Кожна папка у MinIO `agents/<slug>/` визначає ідентичність агента | КОНТРАКТ_АГЕНТА_V1.md §1 |
+| **Файл-як-Інструкція** | Markdown body = інструкції природною мовою/pseudocode. Sources = `sources/*.md` | КОНТРАКТ_АГЕНТА_V1.md §2 |
+| **Контекст ≠ промпт** | Mastra tools (`read-context`, `read-notes`, `read-memory`) дозволяють агенту інкрементально досліджувати контекст | ЦІЛЬОВА_АРХІТЕКТУРА.md §6 |
+| **Human-in-the-loop** | Proposals: агент створює proposal через `create-proposal` tool → Owner approve/reject через UI | INBOX_ТА_PROPOSAL.md §3–4 |
+| **Двоїстість знання–дії** | Знання = файли у MinIO/Git. Дія = Mastra tools. Міст = `_agent.md` як behavioral contract | DRAKON_ІНТЕГРАЦІЯ.md §3 |
+
+### Ключова адаптація
+
+Mastra + Inngest замінюють gh-aw як runtime/orchestration:
+1. **Визначення агентів** живуть у MinIO (`agents/<slug>/`), не у `.github/agents/`
+2. **Safe outputs** відображаються на систему Proposals (агент пропонує, Owner затверджує)
+3. **DRAKON pseudocode** замінює Skills як канонічну логіку агента
+4. **Tools** включають NotebookLM (grounded AI) як головний когнітивний інструмент
+5. **Execution target** — Mastra runtime + Inngest orchestration, не GitHub Actions
+
+---
+
+*Джерело: MANIFESTO.md, розділи 2, 3, 9; архітектурна документація 2026-02-14*

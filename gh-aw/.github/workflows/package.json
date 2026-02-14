@@ -1,8 +1,0 @@
-{
-  "name": "gh-aw-workflows-deps",
-  "private": true,
-  "license": "MIT",
-  "dependencies": {
-    "@sentry/mcp-server": "0.29.0"
-  }
-}

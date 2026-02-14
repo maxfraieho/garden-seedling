@@ -1,38 +1,76 @@
-# Glossary
+# Глосарій
 
-> Terms derived from MANIFESTO.md and codebase evidence
-
----
-
-| Term | Definition | Source |
-|------|-----------|--------|
-| **Agentic Digital Garden** | System where knowledge is not passive documents but simultaneously interface, memory, and behavior | MANIFESTO.md, Section 1 |
-| **Agent** | Bounded context + defined role + instruction + memory + responsibility. NOT a chatbot. | MANIFESTO.md, Section 2.1 |
-| **Folder-as-Agent** | Directory in filesystem that defines an agent's knowledge boundaries, permissions, and visibility | MANIFESTO.md, Section 2.2 |
-| **File-as-Instruction** | Markdown file serving as system prompt, reasoning result, memory, or behavior description | MANIFESTO.md, Section 2.2 |
-| **Subagent** | Subfolder agent, hierarchically subordinate, inherits/extends parent context | MANIFESTO.md, Section 2.2 |
-| **gh-aw** | GitHub Agentic Workflows — universal agent format using YAML frontmatter (config) + Markdown body (logic) | MANIFESTO.md, Section 5 |
-| **DRAKON** | Visual logic language that eliminates ambiguity; used for agent logic definition | MANIFESTO.md, Section 6 |
-| **drakongen** | Code generator that converts DRAKON diagrams to pseudocode, AST, or prompt structures | `drakongen/src/` |
-| **NotebookLM** | Google's cognitive engine used strictly on sources (no hallucination); the system's cognitive core | MANIFESTO.md, Section 4 |
-| **Access Zone** | Delegated knowledge context with access controls, time limits, and consent gates | `src/components/zones/`, `src/hooks/useAccessZones.ts` |
-| **Knowledge-as-Backend** | Paradigm where Markdown files and folders form an intelligent backend for specialized applications | MANIFESTO.md, Section 1 |
-| **Human-in-the-loop** | Principle: agents propose, humans approve. System is extended intelligence, not autopilot. | MANIFESTO.md, Section 8 |
-| **Edit Proposal** | Guest-submitted content change that requires owner approval before being applied | `src/lib/api/mcpGatewayClient.ts` |
-| **MCP** | Model Context Protocol — protocol for agent communication with the gateway | `src/types/mcpGateway.ts` |
-| **Owner** | Authenticated user who controls the garden, approves changes, manages zones | `src/hooks/useOwnerAuth.tsx` |
-| **Guest** | Unauthenticated visitor accessing a delegated zone via access code | Zone consent gate flow |
-| **Wikilinks** | `[[...]]` internal linking syntax (Obsidian-compatible) | `src/lib/notes/wikilinkParser.ts` |
-| **Link Graph** | Visual representation of note interconnections | `src/lib/notes/linkGraph.ts` |
-| **Zettelkasten** | Note-taking method based on atomic, interconnected notes; the human input workflow | MANIFESTO.md, Section 1 |
-| **Safe Outputs** | gh-aw mechanism: structured write operations (create-issue, create-pull-request, add-comment) replacing direct write permissions. Maps to human-in-the-loop: agent proposes via safe-output, system/human approves. | `gh-aw/.github/aw/github-agentic-workflows.md` |
-| **Safe Inputs** | gh-aw mechanism: custom lightweight MCP tools defined inline with `script:` (JS), `run:` (shell), or `py:` (Python). Gives agents read-only data access without full tool permissions. | `gh-aw/.github/aw/github-agentic-workflows.md` |
-| **gh-aw Skill** | Reusable knowledge module at `skills/<name>/SKILL.md`. Provides domain-specific instructions an agent can reference. Maps to manifesto's File-as-Instruction. | `gh-aw/skills/` |
-| **AWF (Agent Workflow Firewall)** | Network egress control for AI agents. Domain-based access controls and activity logging for secure workflow execution. | `gh-aw/README.md`, `github/gh-aw-firewall` |
-| **MCP Gateway (gh-aw)** | Routes MCP server calls through unified HTTP gateway for centralized access management. Complements project's MCP Protocol implementation. | `gh-aw/README.md`, `github/gh-aw-mcpg` |
-| **gh-aw Workflow** | Markdown file with YAML frontmatter (triggers, permissions, tools, safe-outputs) + natural language body (instructions). Compiles to `.lock.yml` for GitHub Actions execution. | `gh-aw/.github/workflows/` |
-| **gh-aw Agent** | Agent definition at `.github/agents/<name>.md`. YAML frontmatter: `name`, `description`, `tools[]`, `infer` (model). Body: natural language instructions. | `gh-aw/.github/agents/` |
+> Терміни, що визначені у MANIFESTO.md та підтверджені архітектурною документацією
+> Оновлено: 2026-02-15 | Архітектура: Mastra + Inngest
 
 ---
 
-*Updated: 2026-02-11*
+## Основні терміни системи
+
+| Термін | Визначення | Джерело |
+|--------|-----------|--------|
+| **Agentic Digital Garden** | Система, де знання не є пасивними документами, а одночасно інтерфейсом, пам'яттю та поведінкою | MANIFESTO.md §1 |
+| **Агент (Agent)** | Обмежений контекст + визначена роль + інструкція + пам'ять + відповідальність. НЕ чатбот. | MANIFESTO.md §2.1 |
+| **Папка-як-Агент (Folder-as-Agent)** | Директорія у файловій системі (MinIO), що визначає межі знань, дозволи та видимість агента | MANIFESTO.md §2.2, КОНТРАКТ_АГЕНТА_V1.md §1 |
+| **Файл-як-Інструкція (File-as-Instruction)** | Markdown-файл, що слугує системним промптом, результатом reasoning, пам'яттю або описом поведінки | MANIFESTO.md §2.2 |
+| **Субагент (Subagent)** | Агент у підпапці, ієрархічно підпорядкований, успадковує/розширює контекст батьківського агента | MANIFESTO.md §2.2 |
+| **DRAKON** | Візуальна алгоритмічна мова, що усуває неоднозначність; використовується для визначення логіки агента | MANIFESTO.md §6, DRAKON_ІНТЕГРАЦІЯ.md |
+| **drakongen** | Генератор коду, що конвертує DRAKON-діаграми у псевдокод, AST або структури промптів | `drakongen/src/` |
+| **NotebookLM** | Когнітивний engine Google, що працює строго по джерелах (без галюцинацій); когнітивне ядро системи | MANIFESTO.md §4 |
+| **Knowledge-as-Backend** | Парадигма, де Markdown-файли та папки формують інтелектуальний бекенд для спеціалізованих застосунків | MANIFESTO.md §1 |
+| **Human-in-the-loop** | Принцип: агенти пропонують, люди затверджують. Система — розширений інтелект, не автопілот | MANIFESTO.md §8 |
+| **Zettelkasten** | Метод ведення нотаток на основі атомарних, взаємопов'язаних записів; людський потік вводу знань | MANIFESTO.md §1 |
+
+---
+
+## Компоненти архітектури
+
+| Термін | Визначення | Джерело |
+|--------|-----------|--------|
+| **MinIO** | Канонічне об'єктне сховище (S3-сумісне); єдине джерело істини для агентних артефактів | ЦІЛЬОВА_АРХІТЕКТУРА.md §1 |
+| **Mastra** | Runtime-інтерпретатор агентів (TypeScript); читає `_agent.md`, створює agent instance, виконує через LLM | ЦІЛЬОВА_АРХІТЕКТУРА.md §2.4 |
+| **Inngest** | Система оркестрації (event-driven, durable execution); відповідає за "коли" та "з якою надійністю" | ЦІЛЬОВА_АРХІТЕКТУРА.md §2.3 |
+| **FastAPI Backend** | Когнітивний проксі до NotebookLM; browser automation через Playwright | АРХІТЕКТУРНА_БАЗА.md §5.2 |
+| **Cloudflare Worker** | API gateway; єдина точка входу для frontend → backend комунікації | АРХІТЕКТУРНА_БАЗА.md §5.3 |
+| **Lovable Frontend** | React SPA; проєкція стану системи, не джерело стану | LOVABLE_УЗГОДЖЕННЯ.md §1 |
+
+---
+
+## Контракти та артефакти
+
+| Термін | Визначення | Джерело |
+|--------|-----------|--------|
+| **`_agent.md`** | Визначення агента: YAML frontmatter (конфігурація) + Markdown body (інструкції/pseudocode). Єдина точка входу для runtime | КОНТРАКТ_АГЕНТА_V1.md §2 |
+| **`pseudocode.md`** | Декларативний behavioral contract; текстове представлення логіки агента, згенероване з DRAKON | DRAKON_ІНТЕГРАЦІЯ.md §2.2 |
+| **Proposal** | Іммутабельний артефакт, що представляє намір змінити canonical storage; проходить через approval gate | INBOX_ТА_PROPOSAL.md §3 |
+| **Inbox** | Канонічна точка прийому намірів у систему; нормалізує сигнали з будь-якого джерела | INBOX_ТА_PROPOSAL.md §1 |
+| **Consent Gate** | Точка явної згоди між двома фазами системи; вимагає підтвердження від уповноваженої сутності | INBOX_ТА_PROPOSAL.md §4 |
+| **Safe Output** | Структурована операція запису, що замінює прямі write permissions. Агент пропонує через safe-output, система/людина затверджує | КОНТРАКТ_АГЕНТА_V1.md §2.2 |
+
+---
+
+## Ролі
+
+| Термін | Визначення | Джерело |
+|--------|-----------|--------|
+| **Owner** | Автентифікований користувач, що контролює garden, затверджує зміни, керує зонами та агентами | `src/hooks/useOwnerAuth.tsx` |
+| **Guest (Гість)** | Неавтентифікований відвідувач, що отримує доступ до делегованої зони через код доступу | Zone consent gate flow |
+| **Зона доступу (Access Zone)** | Делегований контекст знань з контролем доступу, обмеженням часу та consent gate | `src/components/zones/` |
+
+---
+
+## Застарілі терміни (deprecated)
+
+| Термін | Статус | Заміна |
+|--------|--------|--------|
+| **gh-aw** | DEPRECATED | Замінено на Mastra + Inngest архітектуру |
+| **gh-aw Workflow** | DEPRECATED | Замінено на `_agent.md` + Inngest workflows |
+| **gh-aw Agent** | DEPRECATED | Замінено на `_agent.md` (КОНТРАКТ_АГЕНТА_V1) |
+| **gh-aw Skill** | DEPRECATED | Замінено на `sources/` у папці агента |
+| **AWF (Agent Workflow Firewall)** | DEPRECATED | gh-aw specific; не застосовується |
+| **MCP Gateway (gh-aw)** | DEPRECATED | Замінено на Cloudflare Worker gateway |
+| **Safe Inputs (gh-aw)** | DEPRECATED | Замінено на Mastra tools з `tools[]` у `_agent.md` |
+
+---
+
+*Цей глосарій є канонічним довідником термінології системи Garden Seedling.*
