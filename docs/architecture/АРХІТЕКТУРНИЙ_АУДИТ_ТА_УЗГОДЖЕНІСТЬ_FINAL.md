@@ -370,7 +370,26 @@ agents/<slug>/proposals/<proposalId>/
 | `agentExporter()` | Функція не реалізована ([БАЗА] §3.2) | Реалізаційний — не архітектурний |
 | Memory schema formalization | Формат `memory/*` визначений (`facts.md`, `decisions.md`, `sessions/`), але JSON schema відсутня | Низький |
 | Telegram bot integration | Описана в [INBOX] §2.2, не має окремої специфікації | Середній — потребує `docs/integrations/TELEGRAM_INBOX_SPEC.md` |
-| API contracts | Worker endpoints описані в різних документах, не зведені | Середній — потребує `docs/backend/API_CONTRACTS_V1.md` |
+| ~~API contracts~~ | ~~Worker endpoints описані в різних документах, не зведені~~ | ✅ **ВИРІШЕНО:** `docs/backend/API_CONTRACTS_V1.md` |
+
+**Додані документи (2026-02-15, frontend readiness sprint):**
+
+| Документ | Призначення |
+|----------|-------------|
+| `docs/architecture/INBOX_AND_RUN_LIFECYCLE_V1.md` | Витяг lifecycle для UI: Inbox states, Run states (включно з `queued`), TypeScript interfaces |
+| `docs/architecture/PROPOSAL_SYSTEM_V1.md` | Витяг Proposal lifecycle для UI: серверні стани, семантика `reviewing` (UI-only), concurrent proposals |
+| `docs/backend/API_CONTRACTS_V1.md` | Консолідований API контракт: усі endpoints, schemas, auth, rate limits, idempotency |
+
+**Уточнення семантики (2026-02-15):**
+
+| Уточнення | Рішення | Документ |
+|-----------|---------|----------|
+| `reviewing` state | UI-only стан, серверний стан не змінюється | PROPOSAL_SYSTEM_V1.md §1.3 |
+| Run `queued` state | Доданий: `requested → queued → running → completed/failed` | INBOX_AND_RUN_LIFECYCLE_V1.md §2.1 |
+| Status writer | Canonical writer = Inngest/backend, Mastra НЕ пише status.json | INBOX_AND_RUN_LIFECYCLE_V1.md §2.6 |
+| Notification transport | MVP = polling, опціонально SSE в майбутньому | INBOX_AND_RUN_LIFECYCLE_V1.md §3 |
+| Inbox expiry UX | Expired entries приховані, доступні через фільтр | INBOX_AND_RUN_LIFECYCLE_V1.md §1.4 |
+| Concurrent proposals | base_revision + target_hash для optimistic concurrency | PROPOSAL_SYSTEM_V1.md §3 |
 
 ### Рівень зрілості
 

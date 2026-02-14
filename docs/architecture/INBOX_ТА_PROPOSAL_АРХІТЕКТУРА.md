@@ -250,7 +250,7 @@ stateDiagram-v2
 | Стан | Значення | Хто переводить | Наступні стани |
 |------|---------|----------------|----------------|
 | **pending** | Proposal створено, очікує уваги | Inbox | `reviewing`, `auto_approved`, `expired` |
-| **reviewing** | Owner переглядає proposal | Owner (відкриття) | `approved`, `rejected`, `pending` |
+| **reviewing** | Owner переглядає proposal (UI-only стан, не серверний — див. PROPOSAL_SYSTEM_V1.md §1.3) | Owner (відкриття в UI) | `approved`, `rejected`, `pending` |
 | **auto_approved** | Автоматично схвалено правилом | Система (rule engine) | `applying` |
 | **approved** | Owner явно схвалив | Owner | `applying` |
 | **applying** | Зміна записується в canonical storage | Система | `applied`, `failed` |
@@ -671,6 +671,16 @@ sequenceDiagram
 ```
 
 **[ПРИНЦИП]** Кожна фаза залишає систему працездатною. Edit proposals працюють з першого дня на новій інфраструктурі.
+
+---
+
+---
+
+## Див. також
+
+- **INBOX_AND_RUN_LIFECYCLE_V1.md** — витяг: state machines Inbox та Run для Lovable UI
+- **PROPOSAL_SYSTEM_V1.md** — витяг: state machine Proposal, семантика `reviewing`, concurrent proposals
+- **API_CONTRACTS_V1.md** — повні JSON schemas для всіх endpoints
 
 ---
 

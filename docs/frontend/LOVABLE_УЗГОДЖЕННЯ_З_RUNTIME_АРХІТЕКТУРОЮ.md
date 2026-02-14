@@ -488,4 +488,14 @@ graph LR
 
 ---
 
+---
+
+## Див. також
+
+- **INBOX_AND_RUN_LIFECYCLE_V1.md** — state machines Inbox та Run: стани, transitions, TypeScript interfaces для UI
+- **PROPOSAL_SYSTEM_V1.md** — Proposal lifecycle: стани, семантика `reviewing`, concurrent proposals, TypeScript interfaces
+- **API_CONTRACTS_V1.md** — повні JSON schemas для всіх endpoints (request/response)
+
+---
+
 *Цей документ визначає контракт frontend з runtime-архітектурою. Він є обов'язковим для Lovable-імплементації. Зміни цього контракту потребують рішення архітектора.*
